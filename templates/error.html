@@ -1,0 +1,32 @@
+<!-- templates/error.html -->
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <title>エラー</title>
+    <!-- Bootstrap CSSの読み込み -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #f8d7da;
+        }
+
+        #error-container {
+            max-width: 600px;
+            margin: 50px auto;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="error-container">
+        <h1 class="mt-5">エラーが発生しました</h1>
+        <p class="text-danger">{{ error_message }}</p>
+        <a href="/" class="btn btn-primary">設定ページに戻る</a>
+    </div>
+</body>
+
+</html>

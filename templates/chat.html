@@ -1,0 +1,116 @@
+<!-- templates/chat.html -->
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <!-- Bootstrap CSSの読み込み -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <!-- カスタムCSSの読み込み -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <!-- GoogleFontsの読み込み -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Kosugi+Maru&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: rgba(0, 0, 0, 0);
+        }
+    </style>
+</head>
+
+<body>
+    <!-- ナビゲーションバー -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <ul class="navbar-nav ml-auto">
+            <!-- 休憩ボタン -->
+            <li class="nav-item">
+                <button class="btn btn-outline-primary" id="pause-button">休憩</button>
+            </li>
+            <!-- 再開ボタン（初期状態では非表示） -->
+            <li class="nav-item">
+                <button class="btn btn-outline-success" id="resume-button" style="display:none;">再開</button>
+            </li>
+        </ul>
+    </nav>
+
+    <div id="chat-container" class="mt-3">
+        <!-- メッセージがここに表示される -->
+    </div>
+
+    <!-- jQueryとBootstrap JSの読み込み -->
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            function fetchMessages() {
+                fetch('/get_messages')
+                    .then(response => response.json())
+                    .then(data => {
+                        data.forEach(message => {
+                            createMessages(message)
+                        });
+                    })
+                    .catch(error => console.error('Error:', error));
+            }
+
+            function createMessages(message) {
+                const chatContainer = document.getElementById('chat-container');
+                const messageDiv = document.createElement('div');
+                messageDiv.classList.add('message');
+                messageDiv.textContent = message;
+                // 先頭にメッセージを追加
+                chatContainer.insertBefore(messageDiv, chatContainer.firstChild);
+            }
+
+            // 2秒ごとにメッセージを取得
+            setInterval(fetchMessages, 2000);
+
+            // 休憩ボタンのクリックイベント
+            $('#pause-button').click(function () {
+                $.ajax({
+                    type: 'POST',
+                    url: '/pause',
+                    dataType: 'json',
+                    success: function (response) {
+                        if (response.status === 'success') {
+                            createMessages("休憩を受け付けました。")
+                            $('#pause-button').hide();
+                            $('#resume-button').show();
+                        } else {
+                            alert('エラーが発生しました。');
+                        }
+                    },
+                    error: function () {
+                        alert('サーバーへのリクエストに失敗しました。');
+                    }
+                });
+            });
+
+            // 再開ボタンのクリックイベント
+            $('#resume-button').click(function () {
+                $.ajax({
+                    type: 'POST',
+                    url: '/resume',
+                    dataType: 'json',
+                    success: function (response) {
+                        if (response.status === 'success') {
+                            createMessages("再開を受け付けました。")
+                            $('#resume-button').hide();
+                            $('#pause-button').show();
+                        } else {
+                            alert('再開失敗:エラーが発生しました。');
+                        }
+                    },
+                    error: function () {
+                        alert('サーバーへのリクエストに失敗しました。');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>

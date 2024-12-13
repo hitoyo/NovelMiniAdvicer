@@ -1,0 +1,104 @@
+<!-- templates/index.html -->
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <title>設定</title>
+    <!-- Bootstrap CSSの読み込み -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <!-- カスタムCSSの読み込み -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+    <div class="container-sm" id="settings-container">
+        <h1 class="mt-5">設定</h1>
+        <form method="POST">
+            <div class="form-group">
+                <label for="filepath">監視するテキストファイルのパスを入力してください：</label>
+                <input type="text" class="form-control" id="filepath" name="filepath" value="{{ settings['filepath'] }}"
+                    required>
+            </div>
+            <div class="form-group">
+                <label for="model_name">モデル名を入力してください：</label>
+                <input type="text" class="form-control" id="model_name" name="model_name"
+                    value="{{ settings['model_name'] }}" required>
+            </div>
+            <div class="form-group">
+                <label for="system_prompt">システムプロンプトを入力してください：</label>
+                <textarea class="form-control" id="system_prompt" name="system_prompt" rows="4" cols="50"
+                    required>{{ settings['system_prompt'] }}</textarea>
+            </div>
+            <div class="form-group form-row">
+                <div class="col">
+                    <label for="min_interval">回答の最小インターバル（秒）:</label><br>
+                    <input type="number" class="form-control" id="min_interval" name="min_interval"
+                        value="{{ settings['min_interval'] }}" required>
+                </div>
+                <div class="col">
+                    <label for="max_interval">回答の最大インターバル（秒）:</label><br>
+                    <input type="number" class="form-control" id="max_interval" name="max_interval"
+                        value="{{ settings['max_interval'] }}" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <button type="submit" class="btn btn-primary">開始</button>
+                <button type="button" class="btn btn-secondary" onclick="loadSettingsFromLog()">ログから設定復元</button>
+            </div>
+            <!-- 詳細（非表示の context） -->
+            <details>
+                <summary class="text-secondary">開発者メニュー</summary>
+                <label for="context">コンテキスト:</label><br>
+                <textarea class="form-control" id="context" name="context" rows="4" cols="50"></textarea>
+            </details>
+        </form>
+    </div>
+    <script>
+        function loadSettingsFromLog() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.txt';
+            input.onchange = function (event) {
+                const file = event.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        const text = e.target.result;
+                        const lines = text.split('\n');
+                        let model_name = "";
+                        let system_prompt = "";
+                        let context = "";
+
+                        lines.forEach(line => {
+                            if (line.startsWith("モデル名:")) {
+                                model_name = line.split(/:(.+)/)[1].trim();
+                            } else if (line.startsWith("システムプロンプト:")) {
+                                system_prompt = line.split(/:(.+)/)[1].trim();
+                            } else if (line.startsWith("コンテキスト:")) {
+                                context = line.split(/:(.+)/)[1].trim();
+                            }
+                        });
+
+                        if (!model_name || !system_prompt || !context) {
+                            alert("ログファイルを読み込めませんでした。ファイルの内容を確認してください。");
+                        } else {
+
+                            document.getElementById('model_name').value = model_name || "モデル名を入力してください";
+                            document.getElementById('system_prompt').value = system_prompt || "システムプロンプトをここに入力してください。";
+                            document.getElementById('context').value = context || "";
+                        }
+                    };
+                    reader.onerror = function () {
+                        alert("ログファイルの読み込みに失敗しました。ファイルを再確認してください。");
+                    };
+                    reader.readAsText(file);
+                }
+            };
+            input.click();
+        }
+    </script>
+</body>
+
+</html>
